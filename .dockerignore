@@ -1,0 +1,8 @@
+.vscode/
+*.pem
+Dockerfile
+Dockerfile.source
+.*md
+aleo-utils-go/target/
+aleo-utils-go/cmd/
+aleo-utils-go/*.js

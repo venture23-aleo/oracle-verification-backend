@@ -1,0 +1,17 @@
+{
+  "port": 8080,
+  "useTls": false,
+  "tlsKey": "key.pem",
+  "tlsCert": "cert.pem",
+  "uniqueIdTarget": "s+dXsKVvInwVROpuHjnI9LkWhOn5c26C/8Icuw67e+s=",
+  "pcrValuesTarget": [
+    "ifZLGoqBQ0TW/ngrKDUr19ax+HWFDb44GlIkKBuvcczPfBLO6bkhrTlOD3owImfg",
+    "A0OwVs2Ehcp4kN3YM0dteEYK7SqhYVSOTia+3zIXJmliV9Yj6IBfP2BZRrPYsMaq",
+    "EeFmnkqglQNR4pz7vla+0hDxl8AV3Hlb+ZyAVhkIloavkDQQxB5cJWJRbxdaixyl"
+  ],
+  "liveCheck": {
+    "skip": true,
+    "apiBaseUrl": "https://api.explorer.provable.com/v1/testnet",
+    "contractName": "official_oracle.aleo"
+  }
+}
