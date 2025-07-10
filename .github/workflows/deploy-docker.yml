@@ -1,0 +1,42 @@
+name: Deploy Aleo Oracle Verfiication Backend
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: setup ssh host
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_HOST_KEY }}" | base64 -d > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+      - name: docker compose up
+        run: |
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ vars.SSH_USER }}@${{ vars.SSH_HOST }} <<EOF
+          cd ${{ vars.DEPLOY_DIR }}
+          git fetch
+          git checkout ${{ github.ref_name }}
+          git pull
+          # Update env
+          echo -e "APIKEY=$APIKEY" > .env
+          # Update uniqueIdTarget in config.json
+          echo "Updating uniqueIdTarget in config.json"
+          echo "New uniqueIdTarget: $SGX_UNIQUEID"
+          jq ".uniqueIdTarget = \"${SGX_UNIQUEID}\"" config.json > tmp.json && mv tmp.json config.json
+          sudo docker compose down
+          # Remove all dangling (untagged) images to cleanup build artifacts
+          sudo docker image prune -af
+          sudo docker compose build
+          sudo docker compose up -d
+          EOF
+        env:
+          SGX_UNIQUEID: ${{ vars.SGX_UNIQUEID }}
+          APIKEY: ${{ secrets.APIKEY }}
