@@ -28,6 +28,7 @@ func CreateApi(aleoWrapper aleo_wrapper.Wrapper, conf *config.Configuration) htt
 	mux.Handle("/info", addMiddleware(handlers.CreateInfoHandler(conf.UniqueIdTarget, targetPcrs, conf.LiveCheck.ContractName)))
 	mux.Handle("/verify", addMiddleware(handlers.CreateVerifyHandler(aleoWrapper, conf.UniqueIdTarget, targetPcrs)))
 	mux.Handle("/decode", addMiddleware(handlers.CreateDecodeHandler(aleoWrapper)))
+	mux.Handle("/decode_quote", addMiddleware(handlers.DecodeQuoteHandler()))
 
 	return mux
 }
