@@ -50,6 +50,7 @@ func DecodeQuoteHandler() http.HandlerFunc {
 
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate")
 		w.Write(decodedQuote)
 	}
 }
