@@ -13,12 +13,12 @@ import (
 	"time"
 )
 
-func bigIntStrToBytes(strBigInt string) []byte {
+func bigIntStrToBytes(strBigInt string) ([]byte, error) {
 	num := new(big.Int)
 
 	num, ok := num.SetString(strBigInt, 10)
 	if !ok {
-		return nil
+		return nil, errors.New("invalid big integer string")
 	}
 
 	bytes := make([]byte, 16)
@@ -31,7 +31,11 @@ func bigIntStrToBytes(strBigInt string) []byte {
 		num.Rsh(num, 8)
 	}
 
-	return bytes
+	if num.Sign() != 0 {
+		return nil, errors.New("big integer exceeds 128 bits")
+	}
+
+	return bytes, nil
 }
 
 func requestProgramString(c *http.Client, url string, retry bool) (string, error) {
@@ -103,7 +107,11 @@ func parseSgxUniqueIdStruct(uniqueIdStructString string) (string, error) {
 		}
 
 		uniqueIdPart := chunk[valBegin+2 : valEnd]
-		uniqueId = append(uniqueId, bigIntStrToBytes(uniqueIdPart)...)
+		uniqueIdBytes, err := bigIntStrToBytes(uniqueIdPart)
+		if err != nil {
+			return "", err
+		}
+		uniqueId = append(uniqueId, uniqueIdBytes...)
 	}
 
 	if len(uniqueId) != 32 {
@@ -143,7 +151,11 @@ func parseNitroPcrValues(nitroPcrStructString string) ([]string, error) {
 		}
 
 		pcrValuePart := chunk[valBegin+2 : valEnd]
-		pcrValues = append(pcrValues, bigIntStrToBytes(pcrValuePart))
+		pcrValueBytes, err := bigIntStrToBytes(pcrValuePart)
+		if err != nil {
+			return nil, err
+		}
+		pcrValues = append(pcrValues, pcrValueBytes)
 	}
 
 	if len(pcrValues) != 9 {
