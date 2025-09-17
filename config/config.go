@@ -24,6 +24,11 @@ type Configuration struct {
 		Skip         bool   `json:"skip"`
 		ApiBaseUrl   string `json:"apiBaseUrl"`
 		ContractName string `json:"contractName"`
+		MappingUrlTemplate string `json:"mappingUrlTemplate"`
+		SgxUniqueIdMappingName string `json:"sgxUniqueIdMappingName"`
+		SgxUniqueIdMappingKey string `json:"sgxUniqueIdMappingKey"`
+		NitroPcrValuesMappingName string `json:"nitroPcrValuesMappingName"`
+		NitroPcrValuesMappingKey string `json:"nitroPcrValuesMappingKey"`
 	} `json:"liveCheck"`
 }
 
