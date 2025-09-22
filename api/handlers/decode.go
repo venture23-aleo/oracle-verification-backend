@@ -3,7 +3,6 @@ package handlers
 import (
 	"context"
 	"encoding/json"
-	"io"
 	"net/http"
 
 	aleo_wrapper "github.com/venture23-aleo/aleo-utils-go"
@@ -58,15 +57,15 @@ func CreateDecodeHandler(aleo aleo_wrapper.Wrapper) http.HandlerFunc {
 
 		log := GetContextLogger(req.Context())
 
-		body, err := io.ReadAll(req.Body)
 		defer req.Body.Close()
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+
+		body, ok := readRequestBody(w, req)
+		if !ok {
 			return
 		}
 
 		request := new(DecodeProofDataRequest)
-		err = json.Unmarshal(body, request)
+		err := json.Unmarshal(body, request)
 		if err != nil {
 			log.Println("error reading request", err)
 			w.WriteHeader(http.StatusInternalServerError)

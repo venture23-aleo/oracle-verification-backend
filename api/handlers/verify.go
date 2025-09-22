@@ -5,10 +5,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
 	"strings"
 
 	"github.com/venture23-aleo/oracle-verification-backend/attestation"
+	"github.com/venture23-aleo/oracle-verification-backend/config"
 
 	aleo_wrapper "github.com/venture23-aleo/aleo-utils-go"
 )
@@ -61,6 +63,29 @@ func CreateVerifyHandler(aleoWrapper aleo_wrapper.Wrapper, uniqueId string, pcrV
 	}
 }
 
+func readRequestBody(w http.ResponseWriter, req *http.Request) ([]byte, bool) {
+	if req.ContentLength != -1 && req.ContentLength > config.MAX_REQUEST_BODY_SIZE {
+		log.Println("request body is too large")
+		w.WriteHeader(http.StatusRequestEntityTooLarge)
+		return nil, false
+	}
+	limitReader := io.LimitReader(req.Body, config.MAX_REQUEST_BODY_SIZE+1)
+	body, err := io.ReadAll(limitReader)
+	if err != nil {
+		log.Println("error reading request body:", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return nil, false
+	}
+
+	if int64(len(body)) > config.MAX_REQUEST_BODY_SIZE {
+		log.Println("request body is too large")
+		w.WriteHeader(http.StatusRequestEntityTooLarge)
+		return nil, false
+	}
+
+	return body, true
+}
+
 func (vh *verifyHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -74,15 +99,15 @@ func (vh *verifyHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	log := GetContextLogger(req.Context())
 
-	body, err := io.ReadAll(req.Body)
 	defer req.Body.Close()
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+
+	body, ok := readRequestBody(w, req)
+	if !ok {
 		return
 	}
 
 	request := new(VerifyReportsRequest)
-	err = json.Unmarshal(body, request)
+	err := json.Unmarshal(body, request)
 	if err != nil {
 		log.Println("error reading request", err)
 		w.WriteHeader(http.StatusInternalServerError)
