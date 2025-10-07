@@ -12,6 +12,11 @@ import (
 )
 
 func CreateApi(aleoWrapper aleo_wrapper.Wrapper, conf *config.Configuration) http.Handler {
+	if conf == nil {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			http.Error(w, "server configuration missing", http.StatusInternalServerError)
+		})
+	}
 	corsMiddleware := cors.New(cors.Options{
 		AllowedOrigins: []string{"*"},
 		AllowedMethods: []string{http.MethodPost},
@@ -23,7 +28,11 @@ func CreateApi(aleoWrapper aleo_wrapper.Wrapper, conf *config.Configuration) htt
 
 	mux := http.NewServeMux()
 
-	targetPcrs := [3]string{conf.PcrValuesTarget[0], conf.PcrValuesTarget[1], conf.PcrValuesTarget[2]}
+	// Avoid out-of-range panics if fewer than 3 PCR values are configured
+	var targetPcrs [3]string
+	for i := 0; i < 3 && i < len(conf.PcrValuesTarget); i++ {
+		targetPcrs[i] = conf.PcrValuesTarget[i]
+	}
 
 	mux.Handle("/info", addMiddleware(handlers.CreateInfoHandler(conf.UniqueIdTarget, targetPcrs, conf.LiveCheck.ContractName)))
 	mux.Handle("/verify", addMiddleware(handlers.CreateVerifyHandler(aleoWrapper, conf.UniqueIdTarget, targetPcrs)))

@@ -21,11 +21,19 @@ func DecodeQuoteHandler() http.HandlerFunc {
 		}
 
 		body, err := io.ReadAll(req.Body)
-
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
 		defer req.Body.Close()
 
 		var payload DecodeQuoteRequest
 		if err := json.Unmarshal(body, &payload); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		if payload.Quote == "" {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}

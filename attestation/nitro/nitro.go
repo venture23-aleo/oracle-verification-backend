@@ -13,9 +13,11 @@ import (
 	"github.com/venture23-aleo/oracle-verification-backend/u128"
 )
 
-var verifier *nitrite.Verifier
-var initErr error
-var initOnce sync.Once
+var (
+	verifier *nitrite.Verifier
+	initErr  error
+	initOnce sync.Once
+)
 
 type Document struct {
 	ModuleID    string `cbor:"module_id" json:"module_id"`
@@ -42,7 +44,7 @@ func Init() error {
 
 func VerifyNitroReport(reportBytes []byte, nonceString string, targetPcrValues [3]string) (*nitrite.Document, error) {
 	if verifier == nil {
-		panic("nitro verifier is not initialized")
+		return nil, errors.New("nitro verifier is not initialized")
 	}
 
 	report, err := verifier.Verify(reportBytes)
