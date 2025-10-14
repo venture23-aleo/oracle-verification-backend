@@ -22,5 +22,10 @@ func VerifySgxReport(reportBytes []byte, targetUniqueId string) (*attestation.Re
 		return nil, errors.New("report unique ID doesn't match target")
 	}
 
+	if report.Debug {
+		log.Printf("SGX quote is in debug mode")
+		return nil, errors.New("quote is in debug mode")
+	}
+
 	return &report, nil
 }
