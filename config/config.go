@@ -12,6 +12,7 @@ import (
 
 const expectedUniqueIdLength = 32
 const expectedPcrValueLength = 48
+const MAX_REQUEST_BODY_SIZE = 1024 * 1024 * 8 // 8MB
 
 type Configuration struct {
 	Port            uint16   `json:"port"`
