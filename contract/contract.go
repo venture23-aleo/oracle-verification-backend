@@ -8,7 +8,6 @@ import (
 	"log"
 	"math/big"
 	"net/http"
-	"net/url"
 	"strings"
 	"time"
 )
@@ -177,10 +176,13 @@ func parseNitroPcrValues(nitroPcrStructString string) ([]string, error) {
 
 // Retrieves the SGX unique ID from the contract that it uses to verify reports.
 // The contract must have a mapping called sgx_unique_id, where the value us stored as a struct under the "0u8" key.
-func GetSgxUniqueIDAssert(apiBaseUrl, contractName string) (string, error) {
+func GetSgxUniqueIDAssert(apiBaseUrl, contractName, mappingUrlTemplate, sgxUniqueIdMappingName, sgxUniqueIdMappingKey string) (string, error) {
 	apiBaseUrl = strings.TrimSuffix(apiBaseUrl, "/")
 
-	requestUrl := apiBaseUrl + "/program/" + url.PathEscape(contractName) + "/mapping/sgx_unique_id/0u8"
+	requestUrl := strings.Replace(mappingUrlTemplate, "{apiBaseUrl}", apiBaseUrl, 1)
+	requestUrl = strings.Replace(requestUrl, "{contractName}", contractName, 1)
+	requestUrl = strings.Replace(requestUrl, "{mappingName}", sgxUniqueIdMappingName, 1)
+	requestUrl = strings.Replace(requestUrl, "{mappingKey}", sgxUniqueIdMappingKey, 1)
 
 	client := &http.Client{
 		Timeout: time.Second * 30,
@@ -196,10 +198,13 @@ func GetSgxUniqueIDAssert(apiBaseUrl, contractName string) (string, error) {
 
 // Retrieves the Nitro PCR values from the contract that it uses to verify reports.
 // The contract must have a mapping called nitro_pcr_values, where the value us stored as a struct under the "0u8" key.
-func GetNitroPcrValuesAssert(apiBaseUrl, contractName string) ([]string, error) {
+func GetNitroPcrValuesAssert(apiBaseUrl, contractName, mappingUrlTemplate, nitroPcrValuesMappingName, nitroPcrValuesMappingKey string) ([]string, error) {
 	apiBaseUrl = strings.TrimSuffix(apiBaseUrl, "/")
 
-	requestUrl := apiBaseUrl + "/program/" + url.PathEscape(contractName) + "/mapping/nitro_pcr_values/0u8"
+	requestUrl := strings.Replace(mappingUrlTemplate, "{apiBaseUrl}", apiBaseUrl, 1)
+	requestUrl = strings.Replace(requestUrl, "{contractName}", contractName, 1)
+	requestUrl = strings.Replace(requestUrl, "{mappingName}", nitroPcrValuesMappingName, 1)
+	requestUrl = strings.Replace(requestUrl, "{mappingKey}", nitroPcrValuesMappingKey, 1)
 
 	client := &http.Client{
 		Timeout: time.Second * 30,

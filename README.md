@@ -173,6 +173,11 @@ The program looks for [`config.json`](./config.json) in the working directory.
 | `skip` | If true, then will use the unique ID from the reproducible build or configuration and will not query the deployed program |
 | `apiBaseUrl` | Base URL for Aleo node API |
 | `contractName` | Aleo program that has `sgx_unique_id` and `nitro_pcr_values` mappings with the enclave measurements stored at keys `0u8`. |
+| `mappingUrlTemplate` | Template for the URL to query the Aleo node API for the unique ID and PCR values. The following placeholders are supported: `{apiBaseUrl}`, `{contractName}`, `{mappingName}`, `{mappingKey}`. |
+| `sgxUniqueIdMappingName` | Name of the mapping in the Aleo program that contains the SGX enclave unique ID. |
+| `sgxUniqueIdMappingKey` | Key of the mapping in the Aleo program that contains the SGX enclave unique ID. |
+| `nitroPcrValuesMappingName` | Name of the mapping in the Aleo program that contains the Nitro enclave PCR values. |
+| `nitroPcrValuesMappingKey` | Key of the mapping in the Aleo program that contains the Nitro enclave PCR values. |
 
 ## Backend information
 
