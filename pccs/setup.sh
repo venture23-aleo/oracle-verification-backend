@@ -10,7 +10,6 @@ openssl req -new -key private.pem -out csr.pem -subj '/CN=localhost'
 openssl x509 -req -days 365 -in csr.pem -signkey private.pem -out file.crt
 rm -rf csr.pem && chmod 600 ./*
 
-
 # set values in config
 cd ../config/
 if [ -n "$APIKEY" ]; then
