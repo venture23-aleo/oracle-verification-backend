@@ -8,8 +8,7 @@ cd ./ssl_key
 openssl genrsa -out private.pem 2048
 openssl req -new -key private.pem -out csr.pem -subj '/CN=localhost'
 openssl x509 -req -days 365 -in csr.pem -signkey private.pem -out file.crt
-rm -rf csr.pem && chmod 644 ./*
-
+rm -rf csr.pem && chmod 600 ./*
 
 # set values in config
 cd ../config/
@@ -37,7 +36,7 @@ fi
 adminhash=$(echo -n "$adminpass" | sha512sum | tr -d '[:space:]-')
 sed -i "s/\"AdminTokenHash\"[ ]*:[ ]*\"\",/\"AdminTokenHash\": \"$adminhash\",/" default.json
 
-sed -i 's/\"hosts\"[ ]*:[ ]*\"127.0.0.1\",/\"hosts\": \"0.0.0.0\",/' default.json
+sed -i 's/\"hosts\"[ ]*:[ ]*\"127.0.0.1\",/\"hosts\": \"localhost\",/' default.json
 
 cd ..
 
