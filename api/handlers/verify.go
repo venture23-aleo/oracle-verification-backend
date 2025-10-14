@@ -110,21 +110,21 @@ func (vh *verifyHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		if err != nil {
 			log.Printf("failed to decode base64 %s report: %s\n", v.ReportType, err)
 			errors = append(errors, err.Error())
-			break
+			continue
 		}
 
 		_, userData, err := attestation.VerifyReport(v.ReportType, reportBytes, v.Nonce, vh.targetUniqueId, vh.targetPcrValues)
 		if err != nil {
 			log.Printf("error verifying %s report: %s\n", v.ReportType, err)
 			errors = append(errors, err.Error())
-			break
+			continue
 		}
 
 		err = attestation.VerifyReportData(aleoSession, userData, &v)
 		if err != nil {
 			log.Printf("error verifying %s report: %s\n", v.ReportType, err)
 			errors = append(errors, err.Error())
-			break
+			continue
 		}
 
 		validReports = append(validReports, i)
