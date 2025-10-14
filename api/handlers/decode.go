@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strings"
 
 	aleo_wrapper "github.com/venture23-aleo/aleo-utils-go"
 
@@ -51,7 +52,7 @@ func CreateDecodeHandler(aleo aleo_wrapper.Wrapper) http.HandlerFunc {
 			return
 		}
 
-		if req.Header.Get("Content-Type") != "application/json" {
+		if !strings.HasPrefix(strings.ToLower(req.Header.Get("Content-Type")), "application/json") {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
