@@ -96,11 +96,11 @@ func VerifyReportData(aleoSession aleo_wrapper.Session, userData []byte, resp *A
 	// Ensure dataBytes is non-empty before writing special-case overrides
 	if len(dataBytes) > 0 {
 		if resp.AttestationRequest.Url == PriceFeedAleoUrl {
-			dataBytes[0] = 8
+			dataBytes[21] = 8
 		} else if resp.AttestationRequest.Url == PriceFeedBtcUrl {
-			dataBytes[0] = 12
+			dataBytes[21] = 12
 		} else if resp.AttestationRequest.Url == PriceFeedEthUrl {
-			dataBytes[0] = 11
+			dataBytes[21] = 11
 		}
 	}
 
