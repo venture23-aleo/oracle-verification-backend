@@ -8,17 +8,16 @@ import (
 	"log"
 	"math/big"
 	"net/http"
-	"net/url"
 	"strings"
 	"time"
 )
 
-func bigIntStrToBytes(strBigInt string) []byte {
+func bigIntStrToBytes(strBigInt string) ([]byte, error) {
 	num := new(big.Int)
 
 	num, ok := num.SetString(strBigInt, 10)
 	if !ok {
-		return nil
+		return nil, errors.New("invalid big integer string")
 	}
 
 	bytes := make([]byte, 16)
@@ -31,7 +30,11 @@ func bigIntStrToBytes(strBigInt string) []byte {
 		num.Rsh(num, 8)
 	}
 
-	return bytes
+	if num.Sign() != 0 {
+		return nil, errors.New("big integer exceeds 128 bits")
+	}
+
+	return bytes, nil
 }
 
 func requestProgramString(c *http.Client, url string, retry bool) (string, error) {
@@ -103,7 +106,11 @@ func parseSgxUniqueIdStruct(uniqueIdStructString string) (string, error) {
 		}
 
 		uniqueIdPart := chunk[valBegin+2 : valEnd]
-		uniqueId = append(uniqueId, bigIntStrToBytes(uniqueIdPart)...)
+		uniqueIdBytes, err := bigIntStrToBytes(uniqueIdPart)
+		if err != nil {
+			return "", err
+		}
+		uniqueId = append(uniqueId, uniqueIdBytes...)
 	}
 
 	if len(uniqueId) != 32 {
@@ -143,7 +150,11 @@ func parseNitroPcrValues(nitroPcrStructString string) ([]string, error) {
 		}
 
 		pcrValuePart := chunk[valBegin+2 : valEnd]
-		pcrValues = append(pcrValues, bigIntStrToBytes(pcrValuePart))
+		pcrValueBytes, err := bigIntStrToBytes(pcrValuePart)
+		if err != nil {
+			return nil, err
+		}
+		pcrValues = append(pcrValues, pcrValueBytes)
 	}
 
 	if len(pcrValues) != 9 {
@@ -165,10 +176,13 @@ func parseNitroPcrValues(nitroPcrStructString string) ([]string, error) {
 
 // Retrieves the SGX unique ID from the contract that it uses to verify reports.
 // The contract must have a mapping called sgx_unique_id, where the value us stored as a struct under the "0u8" key.
-func GetSgxUniqueIDAssert(apiBaseUrl, contractName string) (string, error) {
+func GetSgxUniqueIDAssert(apiBaseUrl, contractName, mappingUrlTemplate, sgxUniqueIdMappingName, sgxUniqueIdMappingKey string) (string, error) {
 	apiBaseUrl = strings.TrimSuffix(apiBaseUrl, "/")
 
-	requestUrl := apiBaseUrl + "/program/" + url.PathEscape(contractName) + "/mapping/sgx_unique_id/0u8"
+	requestUrl := strings.Replace(mappingUrlTemplate, "{apiBaseUrl}", apiBaseUrl, 1)
+	requestUrl = strings.Replace(requestUrl, "{contractName}", contractName, 1)
+	requestUrl = strings.Replace(requestUrl, "{mappingName}", sgxUniqueIdMappingName, 1)
+	requestUrl = strings.Replace(requestUrl, "{mappingKey}", sgxUniqueIdMappingKey, 1)
 
 	client := &http.Client{
 		Timeout: time.Second * 30,
@@ -184,10 +198,13 @@ func GetSgxUniqueIDAssert(apiBaseUrl, contractName string) (string, error) {
 
 // Retrieves the Nitro PCR values from the contract that it uses to verify reports.
 // The contract must have a mapping called nitro_pcr_values, where the value us stored as a struct under the "0u8" key.
-func GetNitroPcrValuesAssert(apiBaseUrl, contractName string) ([]string, error) {
+func GetNitroPcrValuesAssert(apiBaseUrl, contractName, mappingUrlTemplate, nitroPcrValuesMappingName, nitroPcrValuesMappingKey string) ([]string, error) {
 	apiBaseUrl = strings.TrimSuffix(apiBaseUrl, "/")
 
-	requestUrl := apiBaseUrl + "/program/" + url.PathEscape(contractName) + "/mapping/nitro_pcr_values/0u8"
+	requestUrl := strings.Replace(mappingUrlTemplate, "{apiBaseUrl}", apiBaseUrl, 1)
+	requestUrl = strings.Replace(requestUrl, "{contractName}", contractName, 1)
+	requestUrl = strings.Replace(requestUrl, "{mappingName}", nitroPcrValuesMappingName, 1)
+	requestUrl = strings.Replace(requestUrl, "{mappingKey}", nitroPcrValuesMappingKey, 1)
 
 	client := &http.Client{
 		Timeout: time.Second * 30,

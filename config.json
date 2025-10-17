@@ -12,6 +12,11 @@
   "liveCheck": {
     "skip": true,
     "apiBaseUrl": "https://api.explorer.provable.com/v1/testnet",
-    "contractName": "official_oracle.aleo"
+    "contractName": "official_oracle.aleo",
+    "mappingUrlTemplate": "{apiBaseUrl}/program/{contractName}/mapping/{mappingName}/{mappingKey}",
+    "sgxUniqueIdMappingName": "sgx_unique_id",
+    "sgxUniqueIdMappingKey": "0u8",
+    "nitroPcrValuesMappingName": "nitro_pcr_values",
+    "nitroPcrValuesMappingKey": "0u8"
   }
 }

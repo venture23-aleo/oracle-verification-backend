@@ -23,6 +23,10 @@ const (
 )
 
 func GetContextLogger(ctx context.Context) *log.Logger {
+	if ctx == nil {
+		log.Println("Warning: request context is nil")
+		return log.Default()
+	}
 	logVal := ctx.Value(ContextLogger)
 	if logVal == nil {
 		log.Println("Warning: expected to find logger in request context")
@@ -39,6 +43,10 @@ func GetContextLogger(ctx context.Context) *log.Logger {
 }
 
 func GetContextRequestId(ctx context.Context) string {
+	if ctx == nil {
+		log.Println("Warning: request context is nil")
+		return ""
+	}
 	reqIdVal := ctx.Value(ContextRequestID)
 	if reqIdVal == nil {
 		log.Println("Warning: expected to find request ID in request context")
@@ -55,6 +63,10 @@ func GetContextRequestId(ctx context.Context) string {
 }
 
 func GetContextHandlerName(ctx context.Context) string {
+	if ctx == nil {
+		log.Println("Warning: request context is nil")
+		return ""
+	}
 	handlerNameVal := ctx.Value(ContextHandlerName)
 	if handlerNameVal == nil {
 		log.Println("Warning: expected to find handler name in request context")
