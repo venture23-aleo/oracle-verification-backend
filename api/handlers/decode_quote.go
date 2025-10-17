@@ -32,6 +32,11 @@ func DecodeQuoteHandler() http.HandlerFunc {
 			return
 		}
 
+		if payload.Quote == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
 		reportBytes, err := base64.StdEncoding.DecodeString(payload.Quote)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)

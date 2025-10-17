@@ -83,18 +83,25 @@ func VerifyReport(reportType string, report []byte, nonce string, targetUniqueId
 }
 
 func VerifyReportData(aleoSession aleo_wrapper.Session, userData []byte, resp *AttestationResponse) error {
+	if resp == nil {
+		return ErrVerificationFailedToPrepare
+	}
+
 	dataBytes, err := PrepareProofData(resp.ResponseStatusCode, resp.AttestationData, resp.Timestamp, &resp.AttestationRequest)
 	if err != nil {
 		log.Printf("prepareProofData: %v", err)
 		return ErrVerificationFailedToPrepare
 	}
 
-	if resp.AttestationRequest.Url == PriceFeedAleoUrl {
-		dataBytes[21] = 8
-	} else if resp.AttestationRequest.Url == PriceFeedBtcUrl {
-		dataBytes[21] = 12
-	} else if resp.AttestationRequest.Url == PriceFeedEthUrl {
-		dataBytes[21] = 11
+	// Ensure dataBytes is non-empty before writing special-case overrides
+	if len(dataBytes) > 0 {
+		if resp.AttestationRequest.Url == PriceFeedAleoUrl {
+			dataBytes[0] = 8
+		} else if resp.AttestationRequest.Url == PriceFeedBtcUrl {
+			dataBytes[0] = 12
+		} else if resp.AttestationRequest.Url == PriceFeedEthUrl {
+			dataBytes[0] = 11
+		}
 	}
 
 	formattedData, err := aleoSession.FormatMessage(dataBytes, ALEO_STRUCT_REPORT_DATA_SIZE)
@@ -112,6 +119,9 @@ func VerifyReportData(aleoSession aleo_wrapper.Session, userData []byte, resp *A
 	// Poseidon8 hash is 16 bytes when represented in bytes so here we compare
 	// the resulting hash only with 16 out of 64 bytes of the report's user data.
 	// IMPORTANT! this needs to be adjusted if we put more data in the report
+	if len(userData) < 16 {
+		return ErrVerificationFailedToMatchData
+	}
 	if !bytes.Equal(attestationHash, userData[:16]) {
 		return ErrVerificationFailedToMatchData
 	}
