@@ -12,6 +12,7 @@ import (
 
 const expectedUniqueIdLength = 32
 const expectedPcrValueLength = 48
+const MAX_REQUEST_BODY_SIZE = 1024 * 1024 * 8 // 8MB
 
 type Configuration struct {
 	Port            uint16   `json:"port"`
@@ -24,6 +25,11 @@ type Configuration struct {
 		Skip         bool   `json:"skip"`
 		ApiBaseUrl   string `json:"apiBaseUrl"`
 		ContractName string `json:"contractName"`
+		MappingUrlTemplate string `json:"mappingUrlTemplate"`
+		SgxUniqueIdMappingName string `json:"sgxUniqueIdMappingName"`
+		SgxUniqueIdMappingKey string `json:"sgxUniqueIdMappingKey"`
+		NitroPcrValuesMappingName string `json:"nitroPcrValuesMappingName"`
+		NitroPcrValuesMappingKey string `json:"nitroPcrValuesMappingKey"`
 	} `json:"liveCheck"`
 }
 
