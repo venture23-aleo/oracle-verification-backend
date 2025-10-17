@@ -41,7 +41,12 @@ func VerifySgxReport(reportBytes []byte, targetUniqueId string) (*attestation.Re
 			} else {
 				return nil, errors.New("report has disallowed TCB advisory: " + adv)
 			}
-		}	
+		}
+  	}
+  
+	if report.Debug {
+		log.Printf("SGX quote is in debug mode")
+		return nil, errors.New("quote is in debug mode")
 	}
 
 	return &report, nil

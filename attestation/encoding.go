@@ -135,7 +135,7 @@ func PrepareProofData(statusCode int, attestationData string, timestamp int64, r
 	// - request body (can exist only if method is POST)
 	encodedOptionalFields, err := encoding.EncodeOptionalFields(req.HTMLResultType, req.RequestContentType, req.RequestBody)
 	if err != nil {
-		log.Println("prepareProofDat: failed to write request's optional fields, err =", err)
+		log.Println("prepareProofData: failed to write request's optional fields, err =", err)
 		return nil, err
 	}
 	if _, err = encoding.WriteWithPadding(recorder, encodedOptionalFields); err != nil {

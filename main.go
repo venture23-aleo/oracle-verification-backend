@@ -35,7 +35,7 @@ func main() {
 
 	if !conf.LiveCheck.Skip {
 		log.Println("Requesting SGX Unique ID and Nitro PCR values from", conf.LiveCheck.ContractName, "using", conf.LiveCheck.ApiBaseUrl)
-		liveUniqueId, err := contract.GetSgxUniqueIDAssert(conf.LiveCheck.ApiBaseUrl, conf.LiveCheck.ContractName)
+		liveUniqueId, err := contract.GetSgxUniqueIDAssert(conf.LiveCheck.ApiBaseUrl, conf.LiveCheck.ContractName, conf.LiveCheck.MappingUrlTemplate, conf.LiveCheck.SgxUniqueIdMappingName, conf.LiveCheck.SgxUniqueIdMappingKey)
 		if err != nil {
 			log.Fatalln("Failed to fetch live contract's SGX Unique ID assertion:", err)
 		}
@@ -46,7 +46,7 @@ func main() {
 			log.Fatalf("Reproducible SGX build of the oracle backend produced a different SGX Unique ID than the live contract.\nLive SGX Unique ID: %s\nReproduced SGX Unique ID: %s\n", liveUniqueId, conf.UniqueIdTarget)
 		}
 
-		livePcrValues, err := contract.GetNitroPcrValuesAssert(conf.LiveCheck.ApiBaseUrl, conf.LiveCheck.ContractName)
+		livePcrValues, err := contract.GetNitroPcrValuesAssert(conf.LiveCheck.ApiBaseUrl, conf.LiveCheck.ContractName, conf.LiveCheck.MappingUrlTemplate, conf.LiveCheck.NitroPcrValuesMappingName, conf.LiveCheck.NitroPcrValuesMappingKey)
 		if err != nil {
 			log.Fatalln("Failed to fetch live contract's Nitro PCR values assertion:", err)
 		}

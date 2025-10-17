@@ -57,10 +57,30 @@ func (h *infoHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	response := new(InfoResponse)
 
-	uniqueIdBytes, _ := hex.DecodeString(h.uniqueId)
+	uniqueIdBytes, err := hex.DecodeString(h.uniqueId)
+	if err != nil {
+		log.Println("failed to hex-decode unique ID:", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if len(uniqueIdBytes) < 32 {
+		log.Println("unique ID is shorter than 32 bytes")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
-	uniqueIdAleo1, _ := u128.SliceToU128(uniqueIdBytes[0:16])
-	uniqueIdAleo2, _ := u128.SliceToU128(uniqueIdBytes[16:32])
+	uniqueIdAleo1, err := u128.SliceToU128(uniqueIdBytes[0:16])
+	if err != nil {
+		log.Println("failed to parse unique ID chunk 1:", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	uniqueIdAleo2, err := u128.SliceToU128(uniqueIdBytes[16:32])
+	if err != nil {
+		log.Println("failed to parse unique ID chunk 2:", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	response.TargetUniqueId = uniqueIdInfo{
 		Hex:    h.uniqueId,
@@ -71,8 +91,21 @@ func (h *infoHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	var pcrBytes [3][48]byte
 
 	for idx, pcr := range h.pcrValues {
-		buf, _ := hex.DecodeString(pcr)
-		pcrBytes[idx] = ([48]byte)(buf)
+		if pcr == "" {
+			continue
+		}
+		buf, err := hex.DecodeString(pcr)
+		if err != nil {
+			log.Println("failed to hex-decode PCR value:", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		if len(buf) < 48 {
+			log.Println("PCR value shorter than 48 bytes")
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		copy(pcrBytes[idx][:], buf[:48])
 	}
 
 	response.TargetPcrValues = pcrValuesInfo{

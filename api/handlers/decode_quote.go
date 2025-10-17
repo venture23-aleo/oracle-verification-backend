@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/base64"
 	"encoding/json"
-	"io"
 	"net/http"
 
 	"github.com/edgelesssys/ego/eclient"
@@ -20,12 +19,20 @@ func DecodeQuoteHandler() http.HandlerFunc {
 			return
 		}
 
-		body, err := io.ReadAll(req.Body)
-
 		defer req.Body.Close()
+
+		body, ok := readRequestBody(w, req)
+		if !ok {
+			return
+		}
 
 		var payload DecodeQuoteRequest
 		if err := json.Unmarshal(body, &payload); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		if payload.Quote == "" {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -48,8 +55,9 @@ func DecodeQuoteHandler() http.HandlerFunc {
 			return
 		}
 
-		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate")
+		w.WriteHeader(http.StatusOK)
 		w.Write(decodedQuote)
 	}
 }
