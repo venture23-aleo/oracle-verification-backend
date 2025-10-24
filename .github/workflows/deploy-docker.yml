@@ -3,8 +3,7 @@ name: Deploy Aleo Oracle Verfiication Backend
 on:
   push:
     branches:
-      - main
-
+      - archived
 jobs:
   deploy:
     runs-on: ubuntu-latest
