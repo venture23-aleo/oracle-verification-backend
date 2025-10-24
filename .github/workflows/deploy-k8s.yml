@@ -1,9 +1,9 @@
-name: Build and Push Docker Image
+name: Build and deploy on k3s cluster
 
 on:
   push:
     branches:
-      - ci/add-k8s-deployment
+      - develop
 env:
   IMAGE_TAG: ${{ github.sha }}
 
