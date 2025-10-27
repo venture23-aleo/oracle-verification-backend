@@ -15,6 +15,8 @@ const (
 	PriceFeedBtcUrl  = "price_feed: btc"
 	PriceFeedEthUrl  = "price_feed: eth"
 	PriceFeedAleoUrl = "price_feed: aleo"
+	PriceFeedUsdtUrl = "price_feed: usdt"
+	PriceFeedUsdcUrl = "price_feed: usdc"
 
 	AttestationDataSizeLimit = 1024 * 3
 )
