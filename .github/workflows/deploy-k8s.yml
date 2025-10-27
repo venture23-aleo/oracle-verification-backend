@@ -29,6 +29,11 @@ jobs:
 
       - name: Build Docker image
         run: |
+          # Update uniqueIdTarget in config.json
+          echo "Updating uniqueIdTarget in config.json"
+          echo "New uniqueIdTarget: $SGX_UNIQUEID"
+          jq ".uniqueIdTarget = \"${SGX_UNIQUEID}\"" config.json > tmp.json && mv tmp.json config.json
+          
           # Verification backend
           docker build \
             -t ghcr.io/${{ github.repository_owner }}/oracle-verification-backend:${{ env.IMAGE_TAG }} .
@@ -38,6 +43,8 @@ jobs:
             -t ghcr.io/${{ github.repository_owner }}/pccs:${{ env.IMAGE_TAG }} \
             -f pccs/Dockerfile \
             pccs
+        env:
+          SGX_UNIQUEID: ${{ vars.SGX_UNIQUEID }}
       
       - name: Push Docker image
         run: |
