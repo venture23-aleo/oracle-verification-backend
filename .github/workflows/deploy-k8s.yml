@@ -1,0 +1,126 @@
+name: Build and deploy on k3s cluster
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+env:
+  IMAGE_TAG: ${{ github.sha }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Docker image
+        run: |
+          # Verification backend
+          docker build \
+            -t ghcr.io/${{ github.repository_owner }}/oracle-verification-backend:${{ env.IMAGE_TAG }} .
+
+          # pccs
+          docker build \
+            -t ghcr.io/${{ github.repository_owner }}/pccs:${{ env.IMAGE_TAG }} \
+            -f pccs/Dockerfile \
+            pccs
+      
+      - name: Push Docker image
+        run: |
+          docker push ghcr.io/${{ github.repository_owner }}/oracle-verification-backend:${{ env.IMAGE_TAG }}
+          docker push ghcr.io/${{ github.repository_owner }}/pccs:${{ env.IMAGE_TAG }}
+      
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    # container:
+    #   image: registry.k8s.io/kustomize/kustomize:v5.0.0  
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl jq
+      
+      - name: Install kustomize (official script)
+        run: |
+          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+          sudo mv kustomize /usr/local/bin/
+          kustomize version
+
+
+      - name: Generate JWT
+        run: |
+          cat <<'EOF' > generate_jwt.sh
+          #!/usr/bin/env bash
+          set -o pipefail
+          client_id=$1
+          pem=$2
+          now=$(date +%s)
+          iat=$((${now} - 60))
+          exp=$((${now} + 600))
+          b64enc() { openssl base64 | tr -d '=' | tr '/+' '_-' | tr -d '\n'; }
+          header_json='{"typ":"JWT","alg":"RS256"}'
+          header=$( echo -n "${header_json}" | b64enc )
+          payload_json="{\"iat\":${iat},\"exp\":${exp},\"iss\":\"${client_id}\"}"
+          payload=$( echo -n "${payload_json}" | b64enc )
+          header_payload="${header}.${payload}"
+          signature=$(openssl dgst -sha256 -sign <(echo "${pem}" | sed 's/\\n/\n/g') <(echo -n "${header_payload}") | b64enc)
+          JWT="${header_payload}.${signature}"
+          echo "JWT=${JWT}" >> $GITHUB_ENV
+          EOF
+          chmod +x generate_jwt.sh
+          ./generate_jwt.sh "${{ secrets.CI_APP_ID }}" "${{ secrets.CI_APP_PRIVATE_KEY }}"
+      
+      - name: Get installation ID dynamically
+        id: get-installation
+        run: |
+          INSTALLATION_ID=$(curl -s -H "Authorization: Bearer $JWT" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/app/installations | jq -r '.[0].id')
+          
+          echo "INSTALLATION_ID=$INSTALLATION_ID" >> $GITHUB_ENV
+          echo "Found installation ID: $INSTALLATION_ID"
+
+      - name: Get installation access token
+        id: get-token
+        run: |
+          TOKEN=$(curl -s -X POST \
+            -H "Authorization: Bearer $JWT" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/app/installations/$INSTALLATION_ID/access_tokens | jq -r .token)
+          
+          echo "APP_TOKEN=$TOKEN" >> $GITHUB_ENV
+          echo "✅ Installation token fetched successfully"
+      
+      - name: Checkout devops repository
+        run: |
+          git clone https://x-access-token:${APP_TOKEN}@github.com/venture23-aleo/aleo-devops.git aleo-devops
+          cd aleo-devops
+          git config user.name "ci-v23"
+          git config user.email "238069220+ci-v23@users.noreply.github.com"
+          git fetch origin develop
+          git checkout develop
+
+
+      - name: Update Kustomize image
+        run: |
+          cd aleo-devops/k8s-deployment/oracle-verification-backend/overlays/dev
+          kustomize edit set image oracle-verification-backend=ghcr.io/${{ github.repository_owner }}/oracle-verification-backend:${IMAGE_TAG}
+          kustomize edit set image pccs=ghcr.io/${{ github.repository_owner }}/pccs:${IMAGE_TAG}
+          git add .
+          git commit -m "Update oracle-verification-backend image to ${IMAGE_TAG}"
+          git push https://x-access-token:${APP_TOKEN}@github.com/venture23-aleo/aleo-devops.git develop
