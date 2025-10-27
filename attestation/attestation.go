@@ -101,6 +101,10 @@ func VerifyReportData(aleoSession aleo_wrapper.Session, userData []byte, resp *A
 			dataBytes[21] = 12
 		} else if resp.AttestationRequest.Url == PriceFeedEthUrl {
 			dataBytes[21] = 11
+		} else if resp.AttestationRequest.Url == PriceFeedUsdtUrl {
+			dataBytes[21] = 9
+		} else if resp.AttestationRequest.Url == PriceFeedUsdcUrl {
+			dataBytes[21] = 10
 		}
 	}
 
