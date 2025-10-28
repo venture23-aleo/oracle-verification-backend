@@ -46,7 +46,7 @@ func prepareAttestationData(attestationData string, encodingOptions *encoding.En
 func PrepareProofData(statusCode int, attestationData string, timestamp int64, req *AttestationRequest) ([]byte, error) {
 	preppedAttestationData := attestationData
 
-	if req.Url != PriceFeedBtcUrl && req.Url != PriceFeedEthUrl && req.Url != PriceFeedAleoUrl {
+	if req.Url != PriceFeedBtcUrl && req.Url != PriceFeedEthUrl && req.Url != PriceFeedAleoUrl && req.Url != PriceFeedUsdtUrl && req.Url != PriceFeedUsdcUrl {
 		preppedAttestationData = prepareAttestationData(attestationData, &req.EncodingOptions)
 	}
 
