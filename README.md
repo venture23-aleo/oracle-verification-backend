@@ -35,6 +35,8 @@ given that all other assertions pass.
 
 ### Query for enclave measurements
 
+**Note**: Only SGX based attestation is supported.
+
 You can choose to verify the currently running default notarization backend. You can query `https://sgx.aleooracle.xyz/info` to get an SGX enclave measurement (unique ID):
 
 ```json
