@@ -6,8 +6,8 @@ require (
 	github.com/blocky/nitrite v0.0.2-0.20241022160405-a6f5b6da1e50
 	github.com/edgelesssys/ego v1.7.2
 	github.com/rs/cors v1.11.1
-	github.com/venture23-aleo/aleo-oracle-encoding v1.0.1-0.20251017125106-c912363229aa
-	github.com/venture23-aleo/aleo-utils-go v1.0.1-0.20251017132618-ccdd68a44f44
+	github.com/venture23-aleo/aleo-oracle-encoding v1.1.0
+	github.com/venture23-aleo/aleo-utils-go v1.1.0
 )
 
 require (
