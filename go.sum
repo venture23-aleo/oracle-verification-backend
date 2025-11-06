@@ -24,6 +24,8 @@ github.com/venture23-aleo/aleo-oracle-encoding v1.1.0 h1:sCibecs0zfGaQl1edeQNrse
 github.com/venture23-aleo/aleo-oracle-encoding v1.1.0/go.mod h1:2odvBwFkDCBy2vcpYHa+0qJQiLzKXdineeRX6IfA58U=
 github.com/venture23-aleo/aleo-utils-go v1.1.0 h1:YznxYAd7spC/65FAPjUl5PfKQhBbIV1hJVKZVOFEj20=
 github.com/venture23-aleo/aleo-utils-go v1.1.0/go.mod h1:p+CGO3fJs8MhzTYVQPqmK4L4wtfBeYhAPF7Z8GYKG5w=
+github.com/venture23-aleo/aleo-utils-go v1.2.0 h1:vLYPxt0f+E+ICkdFxEIC/QwAjSuHWUWTSMO3OwNuJ3Y=
+github.com/venture23-aleo/aleo-utils-go v1.2.0/go.mod h1:p+CGO3fJs8MhzTYVQPqmK4L4wtfBeYhAPF7Z8GYKG5w=
 github.com/x448/float16 v0.8.4 h1:qLwI1I70+NjRFUR3zs1JPUCgaCXSh3SW62uAKT1mSBM=
 github.com/x448/float16 v0.8.4/go.mod h1:14CWIYCyZA/cWjXOioeEpHeN/83MdbZDRQHoFcYsOfg=
 golang.org/x/crypto v0.33.0 h1:IOBPskki6Lysi0lo9qQvbxiQ+FvsCC/YWOecCHAixus=
