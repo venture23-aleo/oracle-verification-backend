@@ -4,7 +4,7 @@ At this moment the Aleo blockchain cannot natively verify our TEE reports. To al
 for everyone to run and verify that each oracle update actually carries a valid TEE report. This does not require the user to have a TEE themselves.
 As soon as Aleo is able to verify e.g. ECDSA signatures natively this will become superfluous.
 
-Intended to be run outside of an enclave. Use it with [Oracle SDK](https://github.com/venture23-aleo/oracle-sdk) to verify SGX and Nitro reports from the [notarization backend](https://github.com/venture23-aleo/oracle-notarization-backend).
+Intended to be run outside of an enclave. Use it with [Oracle JS SDK](https://github.com/venture23-aleo/aleo-oracle-sdk-js) or [Oracle Go SDK](https://github.com/venture23-aleo/aleo-oracle-sdk-go) to verify SGX and Nitro reports from the [notarization backend](https://github.com/venture23-aleo/aleo-oracle-notarization-backend).
 
 This server requires [EGo](https://docs.edgeless.systems/ego/) and a [quote provider](https://docs.edgeless.systems/ego/reference/attest).
 
@@ -17,16 +17,14 @@ If EGo is installed from a deb package, run with:
 `CGO_CFLAGS=-I/opt/ego/include CGO_LDFLAGS=-L/opt/ego/lib go run main.go`
 
 Each update on the blockchain carries also the report attesting to the data. Therefore, all data that is required to check the origin and security of the oracle data can be obtained via the blockchain.
-E.g. from `https://explorer.aleo.org/transaction/<transactionId>`
+E.g. from `https://explorer.provable.com/transaction/<transactionId>`
 
 ## Setting up the target enclave measurements
 
 When decoding and verifying enclave reports, this backend will compare the report's enclave measurements with the configured target measurements.
 This means that this backend will be asserting the source code and configuration of the enclave that produced the report, thus verifying the code running in the Oracle backend enclave.
 
-The target enclave measurements are cross-checked using two sources: the reproducible build of the Oracle backend and the configured measurements in an Aleo program that will be using the reports.
-
-Reproducing a build of the Oracle backend ensures that the report-producing enclave is running the exact source code version this backend expects.
+The target enclave measurements are cross-checked using configured measurements in an Aleo program that will be using the reports.
 
 Aleo programs that utilize attestations from the Oracle need to perform certain assertions on an attestation and its report.
 One of the assertions verifies the measurements of the enclave. By querying the enclave measurements from the program,
@@ -112,35 +110,6 @@ Use the `info.uniqueId` and `info.document.pcrs` 0-2 in the configuration file.
 curl -s https://sgx.aleooracle.xyz/info -q | jq -r '.info.uniqueId'
 curl -s https://nitro.aleooracle.xyz/info -q | jq -r '.info.document.pcrs["0"], .info.document.pcrs["1"], .info.document.pcrs["2"]'
 ```
-
-### Reproducible build
-
-You can get the reproducible enclave measurements of the Oracle backend by running  `get-enclave-id.sh`. Use `./get-enclave-id.sh -h` to get help.
-
-The script will download the root CA certificate bundle and Oracle backend source code, then build an enclave (see script's help message for requirements).
-
-The script can be configured with the following environment variables:
-
-| Variable | Description | Default value |
-| :------: | :---------: | :-----------: |
-| `TEMP_WD` | A temporary working directory, where the script will be downloading files. It will be deleted automatically. | A random directory in the current working directory. |
-| `CA_CERT_DATE` | CA file revisions per date of appearance as found at https://curl.se/docs/caextract.html | `2024-07-02` |
-| `ORACLE_REVISION` | Git branch, or commit hash, or tag of Oracle backend to use for reproducible build | `main` |
-
-The produced output is:
-
-```
-...
-Oracle SGX unique ID:
-<unique ID>
-...
-Oracle Nitro PCR:
-<PCR0>
-<PCR1>
-<PCR2>
-```
-
-Use these values in `config.json` to configure the target unique ID and the target PCR values. If the configuration file doesn't have either the target unique ID or the PCR values configured, this backend will itself run the script. The same environment variables can be passed to the backend; the script will inherit the environment.
 
 ### Aleo program's configured enclave measurements
 
