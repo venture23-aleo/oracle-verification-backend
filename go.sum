@@ -22,10 +22,8 @@ github.com/tetratelabs/wazero v1.8.1 h1:NrcgVbWfkWvVc4UtT4LRLDf91PsOzDzefMdwhLfA
 github.com/tetratelabs/wazero v1.8.1/go.mod h1:yAI0XTsMBhREkM/YDAK/zNou3GoiAce1P6+rp/wQhjs=
 github.com/venture23-aleo/aleo-oracle-encoding v1.1.0 h1:sCibecs0zfGaQl1edeQNrseuJ4vp+MWf9UP8xlAT09o=
 github.com/venture23-aleo/aleo-oracle-encoding v1.1.0/go.mod h1:2odvBwFkDCBy2vcpYHa+0qJQiLzKXdineeRX6IfA58U=
-github.com/venture23-aleo/aleo-utils-go v1.2.0 h1:vLYPxt0f+E+ICkdFxEIC/QwAjSuHWUWTSMO3OwNuJ3Y=
-github.com/venture23-aleo/aleo-utils-go v1.2.0/go.mod h1:p+CGO3fJs8MhzTYVQPqmK4L4wtfBeYhAPF7Z8GYKG5w=
-github.com/venture23-aleo/aleo-utils-go v1.3.0 h1:88HJJRb3g+A/SUzH06ox07nzHHHBGxzz78YZHV6uXHs=
-github.com/venture23-aleo/aleo-utils-go v1.3.0/go.mod h1:p+CGO3fJs8MhzTYVQPqmK4L4wtfBeYhAPF7Z8GYKG5w=
+github.com/venture23-aleo/aleo-utils-go v1.4.0 h1:Ti7cNKDkgdP2oWwR37HoXil3ppiIsopDyYeVVwpAygk=
+github.com/venture23-aleo/aleo-utils-go v1.4.0/go.mod h1:p+CGO3fJs8MhzTYVQPqmK4L4wtfBeYhAPF7Z8GYKG5w=
 github.com/x448/float16 v0.8.4 h1:qLwI1I70+NjRFUR3zs1JPUCgaCXSh3SW62uAKT1mSBM=
 github.com/x448/float16 v0.8.4/go.mod h1:14CWIYCyZA/cWjXOioeEpHeN/83MdbZDRQHoFcYsOfg=
 golang.org/x/crypto v0.33.0 h1:IOBPskki6Lysi0lo9qQvbxiQ+FvsCC/YWOecCHAixus=
