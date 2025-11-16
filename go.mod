@@ -7,7 +7,7 @@ require (
 	github.com/edgelesssys/ego v1.7.2
 	github.com/rs/cors v1.11.1
 	github.com/venture23-aleo/aleo-oracle-encoding v1.1.0
-	github.com/venture23-aleo/aleo-utils-go v1.5.0
+	github.com/venture23-aleo/aleo-utils-go v1.6.0
 )
 
 require (
