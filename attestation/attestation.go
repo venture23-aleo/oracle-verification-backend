@@ -97,16 +97,16 @@ func VerifyReportData(aleoSession aleo_wrapper.Session, userData []byte, resp *A
 	// Ensure dataBytes is non-empty before writing special-case overrides
 	if len(dataBytes) > 0 {
 		if resp.AttestationRequest.Url == PriceFeedAleoUrl {
-			dataBytes[21] = 8
+			dataBytes[23] = 8
 		} else if resp.AttestationRequest.Url == PriceFeedUsdtUrl {
-			dataBytes[21] = 9
+			dataBytes[23] = 9
 		} else if resp.AttestationRequest.Url == PriceFeedUsdcUrl {
-			dataBytes[21] = 10
-		} else if resp.AttestationRequest.Url == PriceFeedBtcUrl {
-			dataBytes[21] = 12
+			dataBytes[23] = 10
 		} else if resp.AttestationRequest.Url == PriceFeedEthUrl {
-			dataBytes[21] = 11
-		}
+			dataBytes[23] = 11
+		} else if resp.AttestationRequest.Url == PriceFeedBtcUrl {
+			dataBytes[23] = 12
+		} 
 	}
 
 	formattedData, err := aleoSession.FormatMessage(dataBytes, ALEO_STRUCT_REPORT_DATA_SIZE)
