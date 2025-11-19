@@ -48,6 +48,7 @@ type AttestationResponse struct {
 	ResponseStatusCode int                `json:"responseStatusCode"`
 	Nonce              string             `json:"nonce,omitempty"`
 	Timestamp          int64              `json:"timestamp"`
+	AleoBlockHeight   int64              `json:"aleoBlockHeight"`
 	AttestationRequest AttestationRequest `json:"attestationRequest"`
 }
 
@@ -87,7 +88,7 @@ func VerifyReportData(aleoSession aleo_wrapper.Session, userData []byte, resp *A
 		return ErrVerificationFailedToPrepare
 	}
 
-	dataBytes, err := PrepareProofData(resp.ResponseStatusCode, resp.AttestationData, resp.Timestamp, &resp.AttestationRequest)
+	dataBytes, err := PrepareProofData(resp.ResponseStatusCode, resp.AttestationData, resp.Timestamp, resp.AleoBlockHeight, &resp.AttestationRequest)
 	if err != nil {
 		log.Printf("prepareProofData: %v", err)
 		return ErrVerificationFailedToPrepare
@@ -97,14 +98,14 @@ func VerifyReportData(aleoSession aleo_wrapper.Session, userData []byte, resp *A
 	if len(dataBytes) > 0 {
 		if resp.AttestationRequest.Url == PriceFeedAleoUrl {
 			dataBytes[21] = 8
-		} else if resp.AttestationRequest.Url == PriceFeedBtcUrl {
-			dataBytes[21] = 12
-		} else if resp.AttestationRequest.Url == PriceFeedEthUrl {
-			dataBytes[21] = 11
 		} else if resp.AttestationRequest.Url == PriceFeedUsdtUrl {
 			dataBytes[21] = 9
 		} else if resp.AttestationRequest.Url == PriceFeedUsdcUrl {
 			dataBytes[21] = 10
+		} else if resp.AttestationRequest.Url == PriceFeedBtcUrl {
+			dataBytes[21] = 12
+		} else if resp.AttestationRequest.Url == PriceFeedEthUrl {
+			dataBytes[21] = 11
 		}
 	}
 

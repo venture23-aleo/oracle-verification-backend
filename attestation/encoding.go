@@ -43,7 +43,7 @@ func prepareAttestationData(attestationData string, encodingOptions *encoding.En
 	return attestationData
 }
 
-func PrepareProofData(statusCode int, attestationData string, timestamp int64, req *AttestationRequest) ([]byte, error) {
+func PrepareProofData(statusCode int, attestationData string, timestamp int64, aleoBlockHeight int64, req *AttestationRequest) ([]byte, error) {
 	preppedAttestationData := attestationData
 
 	if req.Url != PriceFeedBtcUrl && req.Url != PriceFeedEthUrl && req.Url != PriceFeedAleoUrl && req.Url != PriceFeedUsdtUrl && req.Url != PriceFeedUsdcUrl {
@@ -78,6 +78,12 @@ func PrepareProofData(statusCode int, attestationData string, timestamp int64, r
 	// write timestamp
 	if _, err = encoding.WriteWithPadding(recorder, encoding.NumberToBytes(uint64(timestamp))); err != nil {
 		log.Println("prepareProofData: failed to write timestamp to buffer, err =", err)
+		return nil, err
+	}
+
+	// write aleo block height
+	if _, err = encoding.WriteWithPadding(recorder, encoding.NumberToBytes(uint64(aleoBlockHeight))); err != nil {
+		log.Println("prepareProofData: failed to write aleo block height to buffer, err =", err)
 		return nil, err
 	}
 

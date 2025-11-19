@@ -14,6 +14,7 @@ type DecodedProofData struct {
 	AttestationData    string `json:"attestationData"`
 	ResponseStatusCode int    `json:"responseStatusCode"`
 	Timestamp          int64  `json:"timestamp"`
+	AleoBlockHeight    int64  `json:"aleoBlockHeight"`
 }
 
 // returns a number aligned to a full block
@@ -82,6 +83,14 @@ func DecodeProofData(buf []byte) (*DecodedProofData, error) {
 		return nil, err
 	}
 	timestamp := encoding.BytesToNumber(timestampBytes[:encoding.TARGET_ALIGNMENT/2])
+	pos += posChange
+
+	// decode aleo block height
+	blockHeightBytes, posChange, err := getBlockSlice(buf, pos, header.AleoBlockHeightLen)
+	if err != nil {
+		return nil, err
+	}
+	aleoBlockHeight := encoding.BytesToNumber(blockHeightBytes[:encoding.TARGET_ALIGNMENT/2])
 	pos += posChange
 
 	// decode status code
@@ -180,7 +189,7 @@ func DecodeProofData(buf []byte) (*DecodedProofData, error) {
 		Timestamp:          int64(timestamp),
 		ResponseStatusCode: int(statusCode),
 		AttestationData:    attestationData,
-
+		AleoBlockHeight:    int64(aleoBlockHeight),
 		AttestationRequest: AttestationRequest{
 			Url:            url,
 			RequestMethod:  requestMethod,
