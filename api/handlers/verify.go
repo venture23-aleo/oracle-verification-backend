@@ -25,6 +25,10 @@ type VerifyReportsRequest struct {
 	Reports []attestation.AttestationResponse `json:"reports"`
 }
 
+type VerifyReportsRequestMultipleTokens struct {
+	Reports []attestation.AttestationResponseMultipleTokens `json:"reports"`
+}
+
 type VerifyReportsResponse struct {
 	Success      bool   `json:"success"`
 	ValidReports []int  `json:"validReports"`
@@ -106,19 +110,22 @@ func (vh *verifyHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	request := new(VerifyReportsRequest)
-	err := json.Unmarshal(body, request)
-	if err != nil {
-		log.Println("error reading request", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+	var request struct {
+		Reports []interface{} `json:"reports"`
 	}
-
-	if len(request.Reports) == 0 {
-		log.Println("no reports to verify")
+	var err error
+	if err = json.Unmarshal(body, &request); err != nil {
+		log.Println("error reading request:", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
+	reports := request.Reports
+	if len(reports) == 0 {
+		log.Println("no reports to verify")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}	
 
 	aleoSession, err := vh.aleoWrapper.NewSession()
 	if err != nil {
@@ -130,30 +137,107 @@ func (vh *verifyHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	validReports := make([]int, 0)
 	var errors []string
-	for i, v := range request.Reports {
-		reportBytes, err := base64.StdEncoding.DecodeString(v.AttestationReport)
+	for i, v := range reports {
+		reportJsonBytes, err := json.Marshal(v)
 		if err != nil {
-			log.Printf("failed to decode base64 %s report: %s\n", v.ReportType, err)
+			log.Printf("failed to marshal report to JSON: %s\n", err)
+			errors = append(errors, err.Error())
+			continue
+		}
+		var tempMap map[string]interface{}
+		if err := json.Unmarshal(reportJsonBytes, &tempMap); err != nil {
+			log.Printf("failed to unmarshal JSON for type checking: %s\n", err)
 			errors = append(errors, err.Error())
 			continue
 		}
 
-		_, userData, err := attestation.VerifyReport(v.ReportType, reportBytes, v.Nonce, vh.targetUniqueId, vh.targetPcrValues)
-		if err != nil {
-			log.Printf("error verifying %s report: %s\n", v.ReportType, err)
-			errors = append(errors, err.Error())
-			continue
+		isMultipleToken := false
+		if results, ok := tempMap["attestationResults"]; ok {
+			// Check if it's an array and if it has elements
+			if resultsSlice, ok := results.([]interface{}); ok && len(resultsSlice) > 0 {
+				isMultipleToken = true
+			}
 		}
 
-		err = attestation.VerifyReportData(aleoSession, userData, &v)
-		if err != nil {
-			log.Printf("error verifying %s report: %s\n", v.ReportType, err)
-			errors = append(errors, err.Error())
-			continue
+		if isMultipleToken {
+			err := vh.VerifyMultipleTokensReport(aleoSession, reportJsonBytes)
+			if err != nil {
+				log.Printf("error verifying multiple tokens report: %s\n", err)
+				errors = append(errors, err.Error())
+				continue
+			}
+		} else {
+			err := vh.VerifySingleTokenReport(aleoSession, reportJsonBytes)
+			if err != nil {
+				log.Printf("error verifying single token report: %s\n", err)
+				errors = append(errors, err.Error())
+				continue
+			}
 		}
+		
+			
 
-		validReports = append(validReports, i)
+		validReports = append(validReports, i)	
 	}
 
 	respondVerify(req.Context(), w, validReports, strings.Join(errors, "; "))
+}
+
+func (vh *verifyHandler) VerifySingleTokenReport(aleoSession aleo_wrapper.Session, reportJsonBytes []byte) error {
+
+	var report attestation.AttestationResponse
+	err := json.Unmarshal(reportJsonBytes, &report)
+	if err != nil {
+		log.Printf("failed to unmarshal report: %s\n", err)
+		return err
+	}
+
+	reportBytes, err := base64.StdEncoding.DecodeString(report.AttestationReport)
+	if err != nil {
+		log.Printf("failed to decode base64 %s report: %s\n", report.ReportType, err)
+		return err
+	}
+
+	_, userData, err := attestation.VerifyReport(report.ReportType, reportBytes, report.Nonce, vh.targetUniqueId, vh.targetPcrValues)
+	if err != nil {
+		log.Printf("error verifying %s report: %s\n", report.ReportType, err)
+		return err
+	}
+
+	err = attestation.VerifyReportData(aleoSession, userData, &report)
+	if err != nil {
+		log.Printf("error verifying %s report: %s\n", report.ReportType, err)
+		return err
+	}
+
+	return nil
+}
+
+func (vh *verifyHandler) VerifyMultipleTokensReport(aleoSession aleo_wrapper.Session, reportJsonBytes []byte) error {
+	var report attestation.AttestationResponseMultipleTokens
+	err := json.Unmarshal(reportJsonBytes, &report)
+	if err != nil {
+		log.Printf("failed to unmarshal report: %s\n", err)
+		return err
+	}
+
+	reportBytes, err := base64.StdEncoding.DecodeString(report.AttestationReport)
+	if err != nil {
+		log.Printf("failed to decode base64 %s report: %s\n", report.ReportType, err)
+		return err
+	}
+
+	_, userData, err := attestation.VerifyReport(report.ReportType, reportBytes, report.Nonce, vh.targetUniqueId, vh.targetPcrValues)
+	if err != nil {
+		log.Printf("error verifying %s report: %s\n", report.ReportType, err)
+		return err
+	}
+
+	err = attestation.VerifyReportDataForMultipleTokens(aleoSession, userData, &report)
+	if err != nil {
+		log.Printf("error verifying %s report: %s\n", report.ReportType, err)
+		return err
+	}
+
+	return nil
 }

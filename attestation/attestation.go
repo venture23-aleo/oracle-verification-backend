@@ -7,6 +7,8 @@ import (
 
 	"github.com/venture23-aleo/oracle-verification-backend/attestation/nitro"
 	"github.com/venture23-aleo/oracle-verification-backend/attestation/sgx"
+	"github.com/venture23-aleo/oracle-verification-backend/common"
+	"github.com/venture23-aleo/oracle-verification-backend/constants"
 
 	encoding "github.com/venture23-aleo/aleo-oracle-encoding"
 	aleo_wrapper "github.com/venture23-aleo/aleo-utils-go"
@@ -19,7 +21,7 @@ const (
 	// Intel SGX
 	TEE_TYPE_SGX string = "sgx"
 
-	ALEO_STRUCT_REPORT_DATA_SIZE = 8
+	ALEO_STRUCT_REPORT_DATA_SIZE = 10
 )
 
 type AttestationRequest struct {
@@ -50,6 +52,26 @@ type AttestationResponse struct {
 	Timestamp          int64              `json:"timestamp"`
 	AttestationRequest AttestationRequest `json:"attestationRequest"`
 }
+
+type AttestationResponseMultipleTokens struct {
+	AttestationReport  string             `json:"attestationReport"`
+	ReportType         string             `json:"reportType"`
+	Nonce              string             `json:"nonce,omitempty"`
+	Timestamp          int64              `json:"timestamp"`
+	AttestationResults []AttestationResultForEachToken `json:"attestationResults"`
+}
+
+
+type AttestationResultForEachToken struct {
+	// Index int `json:"index,omitempty"` // The index of the token.
+	// UserDataChunk []byte `json:"userDataChunk,omitempty"` // The user data chunk.
+	AttestationData string `json:"attestationData"` // The attestation data.
+	AtttestationRequest AttestationRequest `json:"attestationRequest"` // The attestation request.
+	ResponseBody string `json:"responseBody"` // The response body.
+	ResponseStatusCode int `json:"responseStatusCode"`
+	AttestationTimestamp int64 `json:"timestamp"` // The attestation timestamp.
+}
+
 
 var (
 	ErrVerificationFailedToPrepare   = errors.New("verification error: failed to prepare data for report verification")
@@ -108,6 +130,77 @@ func VerifyReportData(aleoSession aleo_wrapper.Session, userData []byte, resp *A
 		}
 	}
 
+	formattedData, err := aleoSession.FormatMessage(dataBytes, ALEO_STRUCT_REPORT_DATA_SIZE)
+	if err != nil {
+		log.Printf("aleo.FormatMessage(): %v\n", err)
+		return ErrVerificationFailedToFormat
+	}
+
+	attestationHash, err := aleoSession.HashMessage(formattedData)
+	if err != nil {
+		log.Printf("aleo.HashMessage(): %v\n", err)
+		return ErrVerificationFailedToHash
+	}
+
+	// Poseidon8 hash is 16 bytes when represented in bytes so here we compare
+	// the resulting hash only with 16 out of 64 bytes of the report's user data.
+	// IMPORTANT! this needs to be adjusted if we put more data in the report
+	if len(userData) < 16 {
+		return ErrVerificationFailedToMatchData
+	}
+	if !bytes.Equal(attestationHash, userData[:16]) {
+		return ErrVerificationFailedToMatchData
+	}
+
+	return nil
+}
+
+
+
+func PrepareOracleUserDataChunk(statusCode int,
+	attestationData string,
+	timestamp uint64,
+	attestationRequest AttestationRequest) (userDataChunk []byte, err error) {
+	// Step 2: Prepare the proof data.
+	userDataProof, err := PrepareProofData(statusCode, attestationData, int64(timestamp), &attestationRequest)
+	
+	if err != nil {
+		return nil, err
+	}
+
+	if common.IsPriceFeedURL(attestationRequest.Url) {
+		tokenID := common.GetTokenIDFromPriceFeedURL(attestationRequest.Url)
+		if tokenID == 0 {
+			return nil, errors.New("unsupported price feed URL")
+		}
+		// MetaHeaders is 32 bytes total.
+		// - The first 21 bytes are reserved for other metadata.
+		// - The token ID is stored at byte index 21 (0-based).
+		userDataProof[21] = byte(tokenID)
+	}
+
+	userDataChunk = make([]byte, constants.ChunkSizeInBytes)
+	copy(userDataChunk, userDataProof)
+
+	return userDataChunk, nil
+}
+
+func VerifyReportDataForMultipleTokens(aleoSession aleo_wrapper.Session, userData []byte, resp *AttestationResponseMultipleTokens) error {
+	if resp == nil {
+		return ErrVerificationFailedToPrepare
+	}
+
+	dataBytes := make([]byte, 0)
+
+	for _, result := range resp.AttestationResults {
+		userDataChunk, err := PrepareOracleUserDataChunk(result.ResponseStatusCode, result.AttestationData, uint64(result.AttestationTimestamp), result.AtttestationRequest)
+		if err != nil {
+			log.Printf("PrepareOracleUserDataChunk(): %v", err)
+			return err
+		}
+		dataBytes = append(dataBytes, userDataChunk...)
+	}
+	
 	formattedData, err := aleoSession.FormatMessage(dataBytes, ALEO_STRUCT_REPORT_DATA_SIZE)
 	if err != nil {
 		log.Printf("aleo.FormatMessage(): %v\n", err)
